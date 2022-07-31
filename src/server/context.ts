@@ -20,6 +20,7 @@ import {
   ErrorPageModule,
   FreshOptions,
   Handler,
+  HandlerContext,
   Island,
   Middleware,
   MiddlewareModule,
@@ -35,6 +36,8 @@ import { ContentSecurityPolicyDirectives, SELF } from "../runtime/csp.ts";
 import { ASSET_CACHE_BUST_KEY, INTERNAL_PREFIX } from "../runtime/utils.ts";
 interface RouterState {
   state: Record<string, unknown>;
+  prependHandler: HandlerContext["prependHandler"];
+  next: HandlerContext["next"];
 }
 
 interface StaticFile {
@@ -298,15 +301,20 @@ export class ServerContext {
       // middlewares should be already sorted from deepest to shallow layer
       const mws = selectMiddlewares(req.url, middlewares);
 
-      const handlers: (() => Response | Promise<Response>)[] = [];
+      const handlers: Handler[] = [];
 
-      const ctx = {
+      const ctx: HandlerContext = {
+        ...connInfo,
         next() {
           const handler = handlers.shift()!;
-          return Promise.resolve(handler());
+          return Promise.resolve(handler(req, ctx));
         },
-        ...connInfo,
+        prependHandler(...newHandlers: typeof handlers) {
+          handlers.unshift(...newHandlers);
+        },
         state: {},
+        params: {},
+        render: () => new Response(null),
       };
 
       for (const mw of mws) {
@@ -316,7 +324,7 @@ export class ServerContext {
       handlers.push(() => inner(req, ctx));
 
       const handler = handlers.shift()!;
-      return handler();
+      return handler(req, ctx);
     };
   }
 

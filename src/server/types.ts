@@ -66,6 +66,8 @@ export interface HandlerContext<Data = unknown, State = Record<string, unknown>>
   params: Record<string, string>;
   render: (data?: Data) => Response | Promise<Response>;
   state: State;
+  next: () => Promise<Response>;
+  prependHandler(...handler: Handler[]): void;
 }
 
 // deno-lint-ignore no-explicit-any
@@ -184,12 +186,10 @@ export interface ErrorPage {
 }
 
 // --- MIDDLEWARES ---
-
-export interface MiddlewareHandlerContext<State = Record<string, unknown>>
-  extends ConnInfo {
-  next: () => Promise<Response>;
-  state: State;
-}
+export type MiddlewareHandlerContext<
+  State = Record<string, unknown>,
+  Data = unknown,
+> = HandlerContext<Data, State>;
 
 export interface MiddlewareRoute extends Middleware {
   /**
@@ -206,14 +206,14 @@ export interface MiddlewareRoute extends Middleware {
 export interface MiddlewareModule<State = any> {
   handler(
     req: Request,
-    ctx: MiddlewareHandlerContext<State>,
+    ctx: MiddlewareHandlerContext<State, unknown>,
   ): Response | Promise<Response>;
 }
 
 export interface Middleware<State = Record<string, unknown>> {
   handler(
     req: Request,
-    ctx: MiddlewareHandlerContext<State>,
+    ctx: MiddlewareHandlerContext<State, unknown>,
   ): Response | Promise<Response>;
 }
 

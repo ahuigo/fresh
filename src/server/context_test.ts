@@ -1,6 +1,7 @@
 import { assert } from "../../tests/deps.ts";
 import { middlewarePathToPattern, selectMiddlewares } from "./context.ts";
-import { MiddlewareRoute } from "./types.ts";
+import { HandlerContext, MiddlewareRoute } from "./types.ts";
+import { ConnInfo } from "./deps.ts";
 
 Deno.test("selectMiddlewares", () => {
   const url = "https://fresh.deno.dev/api/abc/def";
