@@ -204,7 +204,12 @@ Deno.test({
       assertEquals(res.status, Status.OK);
 
       // verify the island is revived.
-      const browser = await puppeteer.launch({ args: ["--no-sandbox"] });
+      const browser = await puppeteer.launch({
+        executablePath:
+          "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome",
+        headless: false,
+        args: ["--start-maximized", "--no-sandbox"],
+      });
       const page = await browser.newPage();
       await page.goto(address, { waitUntil: "networkidle2" });
 
